@@ -126,8 +126,12 @@ def respond(patient: dict, history: list[dict], teachback_done: list[dict], inst
             messages[-1]["content"] += "\n" + m["text"]
         else:
             messages.append({"role": role, "content": m["text"]})
+    if not instruction and messages[-1]["role"] == "assistant":
+        # The fixed 911 text was sent after the patient's last message; the API needs a user turn last.
+        instruction = ("The message above was sent automatically by a safety rule. Follow up on the "
+                       "patient's last message in one or two short sentences.")
     if instruction:
-        # Proactive check-in: the care team, not the patient, asks for a message.
+        # Proactive check-in or follow-up: the care team, not the patient, asks for a message.
         note = f"[Care-team instruction, not from the patient] {instruction}"
         if messages[-1]["role"] == "user":
             messages[-1]["content"] += "\n\n" + note
