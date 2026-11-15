@@ -10,13 +10,21 @@ Many of those patients went home with a discharge letter they could not fully re
 Homeward does three things over iMessage:
 
 1. **Turns the discharge letter into a plan.** A nurse pastes the letter into the dashboard. Claude extracts
-   the medications (new, changed, stopped), daily checks, "call 911 if", "call the nurse if", follow-up dates
-   and three teach-back questions, written for a 5th-grade reader in the patient's language.
+   the medications (new, changed, stopped), daily checks, "call 911 if", "call the nurse if", weight limits,
+   follow-up dates and three teach-back questions, written for a 5th-grade reader in the patient's language.
+   The plan is a draft until the nurse approves it; before that the patient only gets a holding message.
 2. **Checks understanding by text.** The agent asks the teach-back questions one at a time and records
    whether each answer covered the key points. The nurse sees which ones need review.
-3. **Escalates red flags to a person.** Every patient message goes through fixed rules first (emergency
-   phrases, weight gain over the letter's threshold) and then through Claude's triage. Either one can raise
-   an alert on the nurse dashboard. The agent never changes a medication or gives a diagnosis.
+3. **Escalates red flags to a person.** Every patient message goes through fixed rules first (English and
+   Spanish red-flag phrases, weight gain over the plan's daily or weekly limit) and then through Claude's
+   triage. Either one can raise an alert on the nurse dashboard. A rule-level emergency gets a fixed
+   "call 911 now" text before the model is called. The agent never changes a medication or gives a diagnosis.
+4. **Tracks weight from texts.** Numbers like "154 this morning" are parsed, compared with the last one, and
+   charted on the dashboard against the daily limit.
+
+**Who it is for:** heart-failure and other high-readmission discharges, run by the hospital's transitional-care
+nurses. A first pilot would be one heart-failure clinic, 20-30 patients for 30 days, with nurses reviewing every
+plan and every alert, measuring alert precision, teach-back scores and 30-day readmissions against usual care.
 
 ## How it works
 
@@ -44,8 +52,13 @@ nurse dashboard (/) ◀── /api/state (polled) ── alerts, conversation, p
 
 Design choices we can defend:
 
-- **Rules before the model.** "Chest pain" or "up 4 pounds" raises an alert even if the model call fails.
-  If the model call fails for any reason, the patient gets a holding reply and the nurse gets an alert.
+- **Rules before the model.** The phrase rules are plain regular expressions (with negation handling, so
+  "no chest pain today" does not fire) and do not call the model. The weight rules use the limits from the
+  nurse-approved plan, falling back to 3 lb/day and 5 lb/week if the letter gives none. A rule-level
+  emergency sends a fixed 911 text immediately. If the model call fails or times out (20 s, one retry),
+  the patient gets a holding reply and the nurse gets an alert.
+- **Nurse approval.** Claude's plan is a draft until a nurse clicks Approve, so nothing extracted by the model
+  reaches the patient unchecked.
 - **Structured outputs, not prose parsing.** The reply, escalation level and teach-back verdict come back as
   validated fields.
 - **The model only uses the plan.** Every turn sends the extracted plan as context; the system prompt
@@ -66,6 +79,11 @@ Design choices we can defend:
 | Patient and discharge letter | Fictional (`samples/heart_failure.txt`). No real patient data. |
 | Nurse callback | The alert appears on the dashboard; nobody is actually paged. |
 | "Day N" | Advanced by a button so a week fits in a demo. |
+
+Known limits: the red-flag rules cover English and Spanish only and will miss phrasings they were not written
+for (the model check runs on every message as a second layer); the model judges teach-back answers; the
+dashboard has no login; there is no HIPAA/BAA arrangement with any vendor in the path; Photon 2.0 beta iMessage
+supports text and images only, so there are no tapbacks.
 
 This is a hackathon prototype, not a medical device. It has not been clinically validated.
 

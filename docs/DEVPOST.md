@@ -1,6 +1,8 @@
 # Homeward (Devpost text)
 
-**Track:** [Photon] Build a Messaging Agent using Photon 2.0
+**Main track:** Healthcare. **Sponsor track:** [Photon] Build a Messaging Agent using Photon 2.0.
+
+**Who it is for:** transitional-care nurses at a hospital heart-failure clinic, and their patients in the first 30 days at home.
 
 ## Tagline
 
@@ -17,14 +19,17 @@ Patients already text. So we put the follow-up where they already are: iMessage.
 ## What it does
 
 - A nurse pastes the discharge letter into the dashboard and enters the patient's phone number and language.
-- Claude turns the letter into a plan: medications marked new, changed or stopped, daily checks, "call 911 if",
-  "call the nurse if", follow-up dates, and three teach-back questions.
+- Claude turns the letter into a draft plan: medications marked new, changed or stopped, daily checks, "call 911 if",
+  "call the nurse if", weight limits, follow-up dates, and three teach-back questions. The nurse checks it and
+  clicks Approve; until then the patient only gets a holding message.
 - The patient texts the Homeward number. The agent welcomes them, gives today's steps, and asks the teach-back
   questions one at a time. It records whether each answer covered the key points.
-- Every patient message is checked by fixed rules (emergency phrases, weight gain over the letter's threshold)
-  and by Claude's triage. A red flag puts an alert on the nurse dashboard with the patient's exact words and the
+- Every patient message is checked by fixed rules (English and Spanish red-flag phrases with negation handling,
+  weight gain over the plan's daily or weekly limit) and by Claude's triage. A rule-level emergency gets a fixed
+  "call 911 now" text before the model runs. A red flag puts an alert on the nurse dashboard with the patient's exact words and the
   reason, and the patient is told a nurse will call (or to call 911).
-- Each morning the dashboard can send a check-in asking for the day's weight and symptoms.
+- Each morning the dashboard can send a check-in asking for the day's weight and symptoms. Weights the patient
+  texts are charted, and a jump over the limit since the last number raises an alert.
 
 ## How we built it
 
@@ -33,8 +38,9 @@ Patients already text. So we put the follow-up where they already are: iMessage.
 - **Claude** (`claude-opus-5-5`) through the Anthropic Python SDK with structured outputs (`messages.parse` and
   Pydantic models). One call extracts the plan from the letter; one call per message returns the reply, the
   escalation level and the teach-back verdict as validated fields.
-- **Fixed safety rules** in plain Python run before the model, so an emergency phrase or a 4 lb weight gain
-  raises an alert even if the model call fails. A failed model call sends a holding reply and alerts the nurse.
+- **Fixed safety rules** in plain Python run before the model (30 unit tests). The phrase rules never call the
+  model; the weight rules use the limits in the nurse-approved plan, with 3 lb/day and 5 lb/week defaults.
+  Patient-facing model calls time out after 20 s; a failed call sends a holding reply and alerts the nurse.
 - **FastAPI + SQLite** backend, and a single-page nurse dashboard in plain HTML/JS.
 - A local stub phone with the same interface as the Photon channel, so we could build before our Photon key arrived.
 
@@ -62,7 +68,9 @@ Patients already text. So we put the follow-up where they already are: iMessage.
 - Photon Socket.IO events with replay cursors instead of polling.
 - A voice check-in on a dedicated Photon number for patients who do not text.
 - Scheduled daily check-ins and a weight trend chart from the numbers patients send.
-- Review by nurses and a pilot with a heart failure clinic before any real use.
+- A pilot with one heart-failure clinic: 20-30 patients for 30 days, nurses reviewing every plan and alert,
+  measuring alert precision, teach-back scores and 30-day readmissions against usual care.
+- Login for the dashboard, BAAs with every vendor in the path, more languages in the fixed rules.
 
 ## Built with
 
@@ -72,5 +80,6 @@ Pydantic, SQLite, pytest. Built with Claude Code as a coding assistant.
 ## Real vs simulated
 
 The iMessage conversation is real: tested from an iPhone on a Photon 2.0 shared line, replies in about 4 seconds.
-The patient and discharge letter are fictional. Nobody is paged; alerts appear on the dashboard.
+The patient and discharge letter are fictional. The model judges teach-back answers; the dashboard has no login;
+there is no HIPAA/BAA arrangement yet. Nobody is paged; alerts appear on the dashboard.
 "Day N" is advanced by a button. Not clinically validated.
