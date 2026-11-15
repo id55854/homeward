@@ -14,7 +14,8 @@ from pydantic import BaseModel, Field
 
 from . import config
 
-client = anthropic.Anthropic()
+# Patient replies must not hang: 20 s per attempt, one retry. Plan extraction overrides this.
+client = anthropic.Anthropic(timeout=20.0, max_retries=1)
 
 
 class Medication(BaseModel):
@@ -77,9 +78,9 @@ Rules:
 - Use only facts from the plan below or what the patient told you."""
 
 
-def _call(model_cls, system: str, messages: list[dict], effort: str):
+def _call(model_cls, system: str, messages: list[dict], effort: str, timeout: float = 20.0):
     """One structured call. Refusals become an exception the caller handles."""
-    response = client.messages.parse(
+    response = client.with_options(timeout=timeout).messages.parse(
         model=config.MODEL,
         max_tokens=8000,
         system=system,
@@ -98,6 +99,7 @@ def make_plan(letter: str, language: str) -> dict:
         PLAN_SYSTEM,
         [{"role": "user", "content": f"Language for the patient: {language}\n\nDischarge letter:\n{letter}"}],
         effort="medium",
+        timeout=120.0,  # the nurse is waiting on the dashboard, not the patient
     )
     return plan.model_dump()
 

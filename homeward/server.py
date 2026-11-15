@@ -27,7 +27,8 @@ NOT_ENROLLED = (
     "Your number is not on a care plan yet, so please ask your nurse to add you."
 )
 FALLBACK_REPLY = "Thanks for your message. I couldn't process it just now, so I've asked a nurse to call you."
-EMERGENCY_PREFIX = "Please call 911 now. "
+EMERGENCY_TEXT = ("Please call 911 now. What you described can be an emergency. "
+                  "I have also alerted your nurse.")
 
 
 # ---------------------------------------------------------------- message loop
@@ -53,6 +54,11 @@ def handle_incoming(msg: Incoming) -> None:
     rule = safety.check(msg.text, patient["plan"])
     if rule:
         store.add_escalation(pid, rule[0], rule[1], "rule", msg.text)
+    target = patient | {"space_id": msg.space_id, "agent_user_id": msg.agent_user_id}
+    if rule and rule[0] == "emergency":
+        # Fixed text goes out before any model call, so a slow or failed model cannot delay it.
+        _send(target, EMERGENCY_TEXT, f"homeward-911:{msg.id}", msg.id)
+        channel.typing(msg.space_id, msg.agent_user_id, True)
 
     # 2. Model reply and triage.
     instruction = None
@@ -70,11 +76,7 @@ def handle_incoming(msg: Incoming) -> None:
 
     if level != "none" and not (rule and rule[0] == level):
         store.add_escalation(pid, level, reason or "Model flagged this message", "model", msg.text)
-    # A rule-level emergency always reaches the patient, whatever the model said.
-    if (rule and rule[0] == "emergency") and "911" not in reply:
-        reply = EMERGENCY_PREFIX + reply
-
-    _send(patient | {"space_id": msg.space_id, "agent_user_id": msg.agent_user_id}, reply, f"homeward-reply:{msg.id}", msg.id)
+    _send(target, reply, f"homeward-reply:{msg.id}", msg.id)
 
 
 def _send(patient: dict, text: str, key: str, parent_id: str | None = None) -> None:
