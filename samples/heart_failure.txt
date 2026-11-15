@@ -1,0 +1,36 @@
+DISCHARGE SUMMARY (fictional patient, for demonstration)
+
+Patient: Maria Alvarez, 72 F            Admitted: 11/10/2026   Discharged: 11/14/2026
+Attending: Dr. R. Patel, Internal Medicine
+
+Principal diagnosis: Acute on chronic heart failure with reduced ejection fraction (HFrEF), EF 30%.
+Secondary: Hypertension, type 2 diabetes mellitus, CKD stage 3a.
+
+Hospital course: Presented with 5 days of progressive dyspnea on exertion, orthopnea and bilateral
+lower-extremity edema; weight up 4.5 kg from baseline. Diuresed with IV furosemide 40 mg BID with net
+negative 5.1 L. Transitioned to oral diuretic on 11/13. Dry weight on discharge 68.2 kg (150 lb).
+Creatinine peaked at 1.6, 1.3 on discharge. K 4.1.
+
+Discharge medications:
+1. Furosemide 40 mg PO once daily in the morning (NEW DOSE - previously 20 mg)
+2. Sacubitril/valsartan 24/26 mg PO twice daily (NEW - replaces lisinopril)
+3. STOP lisinopril 10 mg (do not take with sacubitril/valsartan)
+4. Metoprolol succinate 25 mg PO once daily (no change)
+5. Spironolactone 12.5 mg PO once daily (NEW)
+6. Empagliflozin 10 mg PO once daily (NEW)
+7. Metformin 500 mg PO twice daily with meals (no change)
+
+Instructions:
+- Daily weights every morning after voiding, before breakfast, same scale. Record in log.
+- Call the heart failure clinic if weight increases by 3 lb in one day or 5 lb in one week.
+- Sodium restriction < 2 g/day. Fluid restriction 1.5 L/day.
+- Call the clinic for increasing shortness of breath, need for more pillows to sleep, new or worse leg swelling,
+  dizziness or lightheadedness when standing, or very low urine output.
+- Call 911 for chest pain, severe shortness of breath at rest, fainting, or confusion.
+
+Follow-up:
+- Heart failure clinic (NP J. Kim) 11/19/2026 at 10:30 AM.
+- BMP (kidney function and potassium) lab draw 11/18/2026.
+- PCP Dr. Osei within 2 weeks.
+
+Heart failure clinic phone: (609) 555-0142
