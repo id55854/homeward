@@ -4,7 +4,7 @@
 
 **Tracks:** Healthcare (main track); [Photon] Build a Messaging Agent using Photon 2.0
 
-**Video:** `homeward-demo.mp4` (about 95 s, link on the Devpost page)
+**Video:** `homeward-demo.mp4` (82 s, link on the Devpost page)
 
 ## Inspiration
 

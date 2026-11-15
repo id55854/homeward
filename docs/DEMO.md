@@ -40,15 +40,15 @@ Send: `im up 4 pounds since yesterday and my ankles look bigger`
 - *Who pays?* Hospitals carry readmission penalties for heart failure under Medicare's Hospital Readmissions Reduction Program; transitional-care nurses are the users.
 - *Privacy?* Fictional patient. Real use needs a BAA with every vendor in the path, a dashboard login, and nurse review.
 
-## Video (about 95 s)
+## Video (about 82 s)
 
-Same format as the Furnish video: 1920×1080, seven scenes, numbered step pill bottom-left, white callout tags, dark-navy title and closing cards, one voiceover clip per scene (Kokoro TTS). Footage is a screen recording of the real dashboard driven through the stub phone; the iPhone bubbles are drawn from the text of the live Photon test. Source: `hackprinceton/video-homeward/` (`capture/record.mjs`, `film/build.mjs`, `film/vo.py`).
+Same format as the Furnish video: 1920×1080, seven scenes, numbered step pill bottom-left, white callout tags, dark-navy title and closing cards, one voiceover clip per scene (Kokoro TTS). Footage is stills from a recorded run of the real dashboard on the local test line (stub phone, real Claude calls); the iPhone bubbles show the exact texts from that run. The closing card says so. The live Photon iMessage path was tested separately from an iPhone. Source: `hackprinceton/video-homeward/` (`capture/record.mjs`, `film/build.mjs`, `film/vo.py`).
 
 | # | Scene | On screen | Voiceover |
 | - | - | - | - |
 | 1 | Meet Maria | Title card: "Maria went home with heart failure." Chips: 7 medicines, 1 stopped, call at +3 lb | "Maria is seventy-two. She went home from hospital yesterday with heart failure, seven medicines, and a letter written for doctors. About one in five patients like her is back in hospital within thirty days." |
 | 2 | ① Letter to plan | Dashboard: sample letter, draft plan appears, Approve | "Her nurse pastes the discharge letter into Homeward. Claude turns it into a plain-language plan: what's new, what changed, what to stop, and when to call. Nothing reaches Maria until the nurse approves it." |
-| 3 | ② Text her where she is | iPhone bubbles over the dashboard: "hi" → welcome and first question | "Maria texts the Homeward number from her iPhone. Through Photon, the reply arrives over iMessage in about four seconds: today's steps, and a first question to check she understood." |
+| 3 | ② Text her where she is | iPhone bubbles over the dashboard: "hi" → welcome and first question | "Maria texts the Homeward number from her iPhone. Through Photon, the reply arrives over iMessage in seconds: today's steps, and a first question to check she understood." |
 | 4 | ③ Check she understood | Teach-back answer, explanation, "needs review" on the dashboard | "She stopped the old blood pressure pill, but doesn't know why. Homeward explains that taking both is unsafe, and the nurse sees that this answer needs review." |
 | 5 | ④ Red flag to a nurse | "up 4 pounds…", amber alert, weight chart | "Next morning: up four pounds, and her ankles look bigger. Fixed rules catch it against the letter's three-pound limit before the model runs. Her nurse gets an alert with her exact words." |
 | 6 | ⑤ Emergencies don't wait | "tengo dolor de pecho" → "Please call 911 now" | "Chest pain, even in Spanish, gets a call nine one one text within seconds. It never waits for the model." |
