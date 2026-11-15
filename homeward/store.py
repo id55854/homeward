@@ -40,6 +40,12 @@ CREATE TABLE IF NOT EXISTS escalations (
     acknowledged INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS weights (
+    id INTEGER PRIMARY KEY,
+    patient_id INTEGER NOT NULL,
+    lb REAL NOT NULL,                   -- parsed from the patient's text by safety.extract_weights
+    created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS teachback (
     id INTEGER PRIMARY KEY,
     patient_id INTEGER NOT NULL,
@@ -141,6 +147,15 @@ def add_escalation(pid: int, level: str, reason: str, source: str, message: str)
         "INSERT INTO escalations (patient_id, level, reason, source, message, created_at) VALUES (?,?,?,?,?,?)",
         (pid, level, reason, source, message, now()),
     )
+
+
+def last_weight(pid: int) -> float | None:
+    rows = q("SELECT lb FROM weights WHERE patient_id=? ORDER BY id DESC LIMIT 1", (pid,))
+    return rows[0]["lb"] if rows else None
+
+
+def add_weight(pid: int, lb: float) -> None:
+    x("INSERT INTO weights (patient_id, lb, created_at) VALUES (?,?,?)", (pid, lb, now()))
 
 
 def add_teachback(pid: int, question: str, answer: str, correct: bool) -> None:

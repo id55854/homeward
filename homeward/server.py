@@ -51,7 +51,10 @@ def handle_incoming(msg: Incoming) -> None:
     channel.typing(msg.space_id, msg.agent_user_id, True)
 
     # 1. Fixed rules first: they do not depend on the model.
-    rule = safety.check(msg.text, patient["plan"])
+    rule = safety.check(msg.text, patient["plan"], store.last_weight(pid))
+    weights = safety.extract_weights(msg.text)
+    if weights:
+        store.add_weight(pid, weights[-1])  # most recent number in the text
     if rule:
         store.add_escalation(pid, rule[0], rule[1], "rule", msg.text)
     target = patient | {"space_id": msg.space_id, "agent_user_id": msg.agent_user_id}

@@ -38,6 +38,7 @@ class Plan(BaseModel):
     call_911_if: list[str]
     call_nurse_if: list[str]
     weight_gain_alert_lb: Optional[float] = Field(description="Pounds of gain in a day that the letter says to report, or null")
+    weight_gain_week_lb: Optional[float] = Field(description="Pounds of gain in a week that the letter says to report, or null")
     follow_up: list[str] = Field(description="Appointments and tests with dates")
     teach_back: list[TeachBack] = Field(description="3 questions covering the most dangerous misunderstandings")
     welcome_message: str = Field(description="First text to the patient: who we are, what we will do, under 320 characters")
