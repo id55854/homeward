@@ -20,6 +20,11 @@ def _load_env_file(path: Path) -> None:
 _load_env_file(ROOT / ".env.local")
 _load_env_file(ROOT.parent / ".env.local")
 
+# Values pasted with quotes into a host's env settings arrive with the quotes; strip them.
+for _key in ("ANTHROPIC_API_KEY", "PHOTON_API_KEY", "PHOTON_PROJECT_ID", "PHOTON_AGENT_HANDLE"):
+    if _key in os.environ:
+        os.environ[_key] = os.environ[_key].strip().strip('"').strip("'")
+
 MODEL = os.environ.get("HOMEWARD_MODEL", "claude-opus-5-5")
 PHOTON_API_KEY = os.environ.get("PHOTON_API_KEY", "")
 PHOTON_PROJECT_ID = os.environ.get("PHOTON_PROJECT_ID", "")
