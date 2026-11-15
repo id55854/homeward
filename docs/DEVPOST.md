@@ -4,6 +4,8 @@
 
 **Tracks:** Healthcare (main track); [Photon] Build a Messaging Agent using Photon 2.0
 
+**Try it:** https://homeward-beige.vercel.app (dashboard) and /phone (test phone). iMessage via Photon runs from our laptop at the demo table.
+
 **Video:** `homeward-demo.mp4` (82 s, link on the Devpost page)
 
 ## Inspiration

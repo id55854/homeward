@@ -26,6 +26,18 @@ Homeward does three things over iMessage:
 nurses. A first pilot would be one heart-failure clinic, 20-30 patients for 30 days, with nurses reviewing every
 plan and every alert, measuring alert precision, teach-back scores and 30-day readmissions against usual care.
 
+## Try it
+
+**Public demo: https://homeward-beige.vercel.app** (nurse dashboard) and **https://homeward-beige.vercel.app/phone** (test phone).
+
+1. On the dashboard: **Use sample letter** → enter a made-up number such as `+1 609 555 0100` → **Make plan and enroll** (about 20 s) → **Approve plan**.
+2. On `/phone`: enter the same number and text `hi`, then `im up 4 pounds since yesterday and my ankles look bigger`.
+
+The public site runs on Vercel with real Claude calls but uses the test phone instead of iMessage: Photon polling needs a
+long-running process, so the iMessage line runs from a laptop (see Run it). Data is kept in `/tmp` and resets when Vercel
+restarts the function; the demo is capped at 20 patients and 300 messages. Anyone with the link can see what is entered,
+so use made-up numbers.
+
 ## How it works
 
 ```
