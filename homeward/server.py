@@ -27,6 +27,10 @@ NOT_ENROLLED = (
     "Your number is not on a care plan yet, so please ask your nurse to add you."
 )
 FALLBACK_REPLY = "Thanks for your message. I couldn't process it just now, so I've asked a nurse to call you."
+HOLDING_TEXT = ("Hi, this is Homeward, the follow-up line from your care team. Your nurse is still checking "
+                "your home plan. I'll text you as soon as it's ready. If you feel very unwell, call 911.")
+FIRST_CONTACT = ("This is the start of the conversation. Reply with the plan's welcome message, then "
+                 "today's key steps in two short sentences, then ask the first teach-back question.")
 EMERGENCY_TEXT = ("Please call 911 now. What you described can be an emergency. "
                   "I have also alerted your nurse.")
 
@@ -63,11 +67,14 @@ def handle_incoming(msg: Incoming) -> None:
         _send(target, EMERGENCY_TEXT, f"homeward-911:{msg.id}", msg.id)
         channel.typing(msg.space_id, msg.agent_user_id, True)
 
-    # 2. Model reply and triage.
-    instruction = None
-    if first_contact:
-        instruction = ("This is the patient's first message. Reply with the plan's welcome message, then "
-                       "today's key steps in two short sentences, then ask the first teach-back question.")
+    # 2. Until the nurse approves the plan, the model does not coach from it.
+    if not patient["approved"]:
+        if not (rule and rule[0] == "emergency"):
+            _send(target, HOLDING_TEXT, f"homeward-hold:{msg.id}", msg.id)
+        return
+
+    # 3. Model reply and triage.
+    instruction = FIRST_CONTACT if first_contact else None
     try:
         turn = brain.respond(patient, store.history(pid), _teachback(pid), instruction)
         reply, level, reason = turn.reply, turn.escalate, turn.escalation_reason
@@ -134,6 +141,7 @@ def state():
         p["messages"] = store.history(p["id"], 200)
         p["escalations"] = store.q("SELECT * FROM escalations WHERE patient_id=? ORDER BY id DESC", (p["id"],))
         p["teachback"] = store.q("SELECT * FROM teachback WHERE patient_id=? ORDER BY id", (p["id"],))
+        p["weights"] = store.q("SELECT lb, created_at FROM weights WHERE patient_id=? ORDER BY id", (p["id"],))
         p.pop("letter", None)
     return {
         "channel": channel.name,
@@ -159,12 +167,33 @@ def enroll(body: Enroll):
     return {"id": pid, "plan": plan}
 
 
+@app.post("/api/patients/{pid}/approve")
+def approve(pid: int):
+    """Nurse signs off the extracted plan. If the patient already texted, send the welcome now."""
+    if not store.patient(pid):
+        raise HTTPException(404)
+    store.x("UPDATE patients SET approved=1 WHERE id=?", (pid,))
+    patient = store.patient(pid)
+    sent = None
+    if patient["space_id"]:
+        with _work_lock:
+            try:
+                sent = brain.respond(patient, store.history(pid), _teachback(pid), FIRST_CONTACT).reply
+            except Exception:
+                log.exception("welcome failed")
+                raise HTTPException(502, "Plan approved, but the welcome message failed; it will go out on the next text.")
+            _send(patient, sent, f"homeward-welcome:{pid}")
+    return {"approved": True, "sent": sent}
+
+
 @app.post("/api/patients/{pid}/checkin")
 def checkin(pid: int):
     """Advance to the next day and send that day's check-in (needs one earlier patient message)."""
     patient = store.patient(pid)
     if not patient:
         raise HTTPException(404)
+    if not patient["approved"]:
+        raise HTTPException(409, "Approve the plan first.")
     if not patient["space_id"]:
         raise HTTPException(409, "The patient has to text the line first; Photon shared lines cannot start a conversation.")
     with _work_lock:

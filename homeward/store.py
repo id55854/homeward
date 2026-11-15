@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS patients (
     letter TEXT NOT NULL,               -- discharge letter as given by the nurse
     plan TEXT NOT NULL,                 -- JSON from brain.make_plan
     day INTEGER NOT NULL DEFAULT 1,     -- day since discharge (advanced from the dashboard)
+    approved INTEGER NOT NULL DEFAULT 0, -- nurse approved the extracted plan; until then only holding replies
     space_id TEXT,                      -- Photon conversation, known after the first inbound message
     agent_user_id TEXT,                 -- Photon user id of our line in that conversation
     created_at TEXT NOT NULL
@@ -101,7 +102,7 @@ def add_patient(name: str, handle: str, language: str, letter: str, plan: dict) 
     x(
         "INSERT INTO patients (name, handle, language, letter, plan, created_at) VALUES (?,?,?,?,?,?) "
         "ON CONFLICT(handle) DO UPDATE SET name=excluded.name, language=excluded.language, "
-        "letter=excluded.letter, plan=excluded.plan, day=1",
+        "letter=excluded.letter, plan=excluded.plan, day=1, approved=0",
         (name, handle, language, letter, json.dumps(plan), now()),
     )
     return q("SELECT id FROM patients WHERE handle=?", (handle,))[0]["id"]
