@@ -90,6 +90,11 @@ const time = iso => new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute
 
 async function refresh() {
   try { last = await (await fetch("/api/state")).json(); } catch { return; }
+  if (last.public_demo) {
+    $("meta").innerHTML = `Public demo: messages go through the <a href="/phone" target="_blank">test phone</a>, not iMessage (that runs locally on Photon). Use a made-up number; anyone can see this page and data resets. Model: ${esc(last.model)}`;
+    if (!sel && last.patients.length) sel = last.patients[0].id;
+    render(); return;
+  }
   $("meta").textContent = `channel: ${last.channel === "photon" ? "Photon 2.0 (iMessage" + (last.agent_handle ? " " + last.agent_handle : "") + ")" : "local stub, open /phone"} · model: ${last.model}`;
   if (!sel && last.patients.length) sel = last.patients[0].id;
   render();

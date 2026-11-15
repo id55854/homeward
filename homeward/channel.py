@@ -31,9 +31,12 @@ class StubChannel:
         self.inbox: "queue.Queue[Incoming]" = queue.Queue()
         self._n = 0
 
-    def push(self, handle: str, text: str) -> None:
+    def make(self, handle: str, text: str) -> Incoming:
         self._n += 1
-        self.inbox.put(Incoming(f"stub-{self._n}-{datetime.now().timestamp()}", handle, text, f"stub-space:{handle}", "stub-agent"))
+        return Incoming(f"stub-{self._n}-{datetime.now().timestamp()}", handle, text, f"stub-space:{handle}", "stub-agent")
+
+    def push(self, handle: str, text: str) -> None:
+        self.inbox.put(self.make(handle, text))
 
     def poll(self) -> list[Incoming]:
         items = []

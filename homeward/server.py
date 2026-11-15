@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from . import brain, config, safety, store
-from .channel import Incoming, StubChannel, make_channel
+from .channel import Incoming, PhotonChannel, StubChannel, make_channel
 
 log = logging.getLogger("homeward")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -121,7 +121,8 @@ app = FastAPI(title="Homeward")
 @app.on_event("startup")
 def _start() -> None:
     store.conn()
-    threading.Thread(target=loop, daemon=True).start()
+    if isinstance(channel, PhotonChannel):  # the stub handles each text inside its request instead
+        threading.Thread(target=loop, daemon=True).start()
 
 
 @app.get("/")
@@ -145,8 +146,9 @@ def state():
         p.pop("letter", None)
     return {
         "channel": channel.name,
-        "agent_handle": config.PHOTON_AGENT_HANDLE,
+        "agent_handle": config.PHOTON_AGENT_HANDLE if config.USE_PHOTON else "",
         "model": config.MODEL,
+        "public_demo": config.ON_VERCEL,
         "patients": patients,
     }
 
@@ -162,6 +164,10 @@ class Enroll(BaseModel):
 def enroll(body: Enroll):
     if not body.letter.strip():
         raise HTTPException(400, "Paste the discharge letter.")
+    if len(body.letter) > 20000:
+        raise HTTPException(400, "Letter is too long for this demo (20,000 characters).")
+    if config.MAX_PATIENTS and len(store.patients()) >= config.MAX_PATIENTS:
+        raise HTTPException(429, "This public demo has reached its patient limit.")
     plan = brain.make_plan(body.letter, body.language)
     pid = store.add_patient(body.name, body.handle, body.language, body.letter, plan)
     return {"id": pid, "plan": plan}
@@ -227,7 +233,14 @@ class StubText(BaseModel):
 def stub_send(body: StubText):
     if not isinstance(channel, StubChannel):
         raise HTTPException(409, "Running on Photon: text the real number instead.")
-    channel.push(store.normalize_handle(body.handle), body.text)
+    if not body.text.strip() or len(body.text) > 1000:
+        raise HTTPException(400, "Message must be 1-1000 characters.")
+    if config.MAX_MESSAGES and store.q("SELECT COUNT(*) n FROM messages")[0]["n"] >= config.MAX_MESSAGES:
+        raise HTTPException(429, "This public demo has reached its message limit.")
+    # Handled inside the request (no background loop), so it also works on serverless hosts.
+    msg = channel.make(store.normalize_handle(body.handle), body.text)
+    with _work_lock:
+        handle_incoming(msg)
     return {"ok": True}
 
 
