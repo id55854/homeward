@@ -61,7 +61,7 @@ Design choices we can defend:
 | Part | Status |
 | - | - |
 | Claude plan extraction and replies | Real API calls to `claude-opus-5-5`. |
-| Photon 2.0 iMessage | Real when `PHOTON_API_KEY` and `PHOTON_PROJECT_ID` are set; see the demo notes for what was tested live. |
+| Photon 2.0 iMessage | Real. Tested live on 15 Nov 2026 on a Photon 2.0 shared iMessage line: texts from an iPhone were received through `list_messages`, and replies were sent with `send_message` about 4 s later, including the weight-gain alert. |
 | Stub phone (`/phone`) | Simulated phone used when no Photon key is set. Messages go through the same agent code. |
 | Patient and discharge letter | Fictional (`samples/heart_failure.txt`). No real patient data. |
 | Nurse callback | The alert appears on the dashboard; nobody is actually paged. |

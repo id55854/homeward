@@ -71,5 +71,6 @@ Pydantic, SQLite, pytest. Built with Claude Code as a coding assistant.
 
 ## Real vs simulated
 
+The iMessage conversation is real: tested from an iPhone on a Photon 2.0 shared line, replies in about 4 seconds.
 The patient and discharge letter are fictional. Nobody is paged; alerts appear on the dashboard.
 "Day N" is advanced by a button. Not clinically validated.
